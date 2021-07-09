@@ -14,6 +14,25 @@ addresses = {}
 
 tags = {}
 
+def loadAddresses(filename='addresses.json'):
+    global addresses
+    with open(filename, 'r') as fin:
+        addresses = json.load(fin)
+
+def discoverDevices():
+    global addresses
+    res = p3.CIPDriver.discover()
+    
+    with open('raw_discover.json', 'w+') as fout:
+        json.dump({'res': res}, indent='\t')
+
+    for element in res:
+        addresses[element['serial']] = element['ip_address']
+
+    with open('addresses.json', 'w+') as fout:
+        json.dump(addresses, indent='\t')
+
+
 def discoveryTags(ip):
     with p3.LogixDriver(ip) as plc:
         tags[ip] = plc.get_tag_list()
@@ -34,6 +53,9 @@ def writeTag(ip, tag, val):
 
 
 if __name__ == '__main__':
+
+    discoverDevices()
+
     for ip in addresses.values():
         discoveryTags(ip)
 
